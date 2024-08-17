@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius:20,
     justifyContent:'center',
-    marginTop: '6%',
+    //marginTop: '6%',
     marginLeft:10
   },
   todotext:{
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems:'center',
     justifyContent:'center',
-    marginTop: '6%'
+    //marginTop: '6%'
 
 
   }

@@ -1,106 +1,126 @@
+import { StatusBar } from 'expo-status-bar';
 import { Pressable, SafeAreaView, StyleSheet, Text, TextInput, View} from 'react-native';
 import Headerim from './src/component/headerim';
 import Liste from './src/component/Liste';
 import Yapilanlar from './src/component/Yapilanlar';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App() {
+
+  const [dataa, setdataa] = useState({"yapilacaklar":[]})
+  
+  useEffect(()=>{
+    const getir = async()=>{
+      let da = await vericek();
+      setdataa(da)
+      
+      
+    }
+    getir()
+    
+  }, [])
+
   const [isyeniekle, setisyeniekle] = useState(false)
 
 
-
-  const _storeData = async (deger) => {
-    console.log("eklemeyebas")
-    const jsonValue = JSON.stringify(deger);
-    try {
-    console.log("ekliyo "+jsonValue)
-
-      await AsyncStorage.setItem(
-        'Yapilcaklar',
-        jsonValue,
-      );
-    console.log("ekledi")
-
-    } catch (error) {
-      // Error saving data
-    console.log("hata")
-
+  async function vericek()
+  {
+    let veri = await AsyncStorage.getItem("deneme")
+    if(veri == undefined)
+    {
+      veri = JSON.stringify({"yapilacaklar":[]})
     }
-  };
+    setdataa(JSON.parse(veri))
+    //console.log("veri",veri)
+    return JSON.parse(veri)
+  }
 
-  _retrieveData = async () => {
-    console.log("getirmeyebas")
-    try {
-    console.log("deniyo")
-      const value = await AsyncStorage.getItem('Yapilcaklar');
-      if (value !== null) {
-        setdataa(JSON.parse(value))
-        console.log("buldu")
-        
-        console.log("DEGERİ " + value);
-        //return JSON.parse(value,true)
-      }
-      else
-      {
+  const eklencek = async ()=>{
+    await AsyncStorage.setItem("deneme",JSON.stringify(dataa))
+    // 0 lama kodu
+    //await AsyncStorage.setItem("deneme",JSON.stringify({"yapilacaklar":[]}))
+    
+  }
 
-    console.log("bulamadı")
-        //return []
-      }
-    } catch (error) {
-      // Error retrieving data
-    console.log("hata")
-
-    }
-  };
-/*   const storeData = async (value,key) => {
-    try {
-      const jsonValue = JSON.stringify(value);
-      await AsyncStorage.setItem("key", "jsonValue");
-    } catch (err) {
-      console.log("Error ",err)
-    }
-  }; */
-
-  const getData = async (key) => {
-    try {
-      const jsonValue = await AsyncStorage.getItem(key);
-      return jsonValue != null ? JSON.parse(jsonValue) : [];
-    } catch (err) {
-      console.log("Error ",err)
-    }
-  };
   
 
-  const dataekle =async(isimi,idi) =>{
-    await dataa.push({isim:isimi,id:idi})
-    await setdataa(dataa)
-    await _storeData(dataa);
+  async function dataekle(isimi,idi)
+  {
+    await dataa.yapilacaklar.push({isim:isimi,id:idi,yapildi:false})
+    setdataa(dataa)
+    await eklencek();
     setYeniyapilcak("")
 
   }
 
-  const [dataa, setdataa] = useState([])
+
+  const yapildiisaretle = async (id) => {
+    await dataa.yapilacaklar.map(i => {
+      if(i.id == id)
+      {
+        i.yapildi = true;
+      }
+    })
+    setdataa(dataa)
+    await eklencek();
+    await vericek();
+  }
+
+  const yapilmadiisaretle = async (id) => {
+    await dataa.yapilacaklar.map(i => {
+      if(i.id == id)
+      {
+        i.yapildi = false;
+      }
+    })
+    setdataa(dataa)
+    await eklencek();
+    await vericek();
+  }
+
+  const silme = async (id) => {
+    await dataa.yapilacaklar.splice(dataa.yapilacaklar.findIndex(i=> i.id == id),1)
+    setdataa(dataa)
+    await eklencek();
+    await vericek();
+  }
+
+  const yaziedit = async (id, text) => {
+    dataa.yapilacaklar.find(i=> i.id == id).isim = text;
+    setdataa(dataa)
+    await eklencek();
+    await vericek();
+  }
+
   
+
   const [yeniyapilcak, setYeniyapilcak] = useState("")
   
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style='auto'/>
       <Headerim flex={1} butontikla= {()=>{setisyeniekle(!isyeniekle)}} />
       <View style={[{display: isyeniekle ? 'flex' :'none'},styles.yenieklebox]}>
       <TextInput style={styles.yeniekletextinput} onChangeText={setYeniyapilcak} value={yeniyapilcak} />
       <Pressable style={({pressed}) => [{backgroundColor: pressed ? '#CF473C': '#CA3E47'},styles.yenieklebutonbox]} 
         onPress={()=>{
-        dataekle(yeniyapilcak, (dataa.length != 0) ? (dataa[(dataa.length-1)].id+1) : 1);
+
+        yeniyapilcak.length != 0 && dataekle(yeniyapilcak, (dataa.yapilacaklar != undefined) && ((dataa.yapilacaklar.length != 0) ? (dataa.yapilacaklar[(dataa.yapilacaklar.length-1)].id+1) : 1));
 
       }} >
         <Text style={styles.yeniekletext}>Ekle</Text>
       </Pressable>
       </View>
       <View style={{flex:7}}>
-      <Liste dataaa={dataa}/>
-      {console.log(dataa)}
-      <Yapilanlar/>
+      <Liste dataaa={dataa.yapilacaklar.filter(veri => !veri.yapildi)} yapildifonk={yapildiisaretle} silfonk={silme} editfonk={yaziedit} />
+      {//console.log("yapilcaklar",typeof(dataa.yapilacaklar),dataa.yapilacaklar)
+      }
+      {//console.log("data ",dataa)
+      }
+      {dataa.yapilacaklar.filter(veri => veri.yapildi).length != 0 && <Yapilanlar dataaa={dataa.yapilacaklar.filter(veri => veri.yapildi)} yapilmadifonk={yapilmadiisaretle} silfonk={silme} />
+      }
+      
       </View>
     </SafeAreaView>
 

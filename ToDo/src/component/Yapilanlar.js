@@ -1,7 +1,8 @@
 import { StyleSheet, Text, ScrollView, View } from 'react-native'
 import React from 'react'
+import YapildiOgesi from './YapildiOgesi'
 
-const Yapilanlar = () => {
+const Yapilanlar = ({dataaa, yapilmadifonk, silfonk}) => {
   return (
     <ScrollView style={[{
         
@@ -9,7 +10,9 @@ const Yapilanlar = () => {
     <View style={styles.yapilanbox}>
         <Text style={styles.yapilantext}>YAPILANLAR</Text>
     </View>
-      
+    {dataaa != undefined && dataaa.length > 0 && dataaa.map((veri)=>{
+        return (<YapildiOgesi title={veri.isim} key={veri.id} idsi={veri.id} yapilmadifonks={yapilmadifonk} silfonks={silfonk} />)
+    })}
 
     </ScrollView>
   )
